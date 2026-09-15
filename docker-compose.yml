@@ -1,0 +1,43 @@
+services:
+
+  app:
+    build:
+      context: .
+      args:
+        entorno: development
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - ENVIRONMENT=development
+      - 'CONNECTIONSTRINGS={"EdiAuto":"postgresql://edi_admin:edi_admin_pass@postgres:5432/edi_auto"}'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    command: >
+      python -m uvicorn app.main:app
+        --host 0.0.0.0
+        --port 8080
+        --reload
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: edi_auto
+      POSTGRES_USER: edi_admin
+      POSTGRES_PASSWORD: edi_admin_pass
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U edi_admin -d edi_auto"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

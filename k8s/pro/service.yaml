@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: amc-py-agent-ediauto
+  namespace: qa
+  labels:
+    app: amc-py-agent-ediauto
+spec:
+  ports:
+    - port: 8080
+  selector:
+    app: amc-py-agent-ediauto

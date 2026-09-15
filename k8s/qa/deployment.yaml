@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: amc-py-agent-ediauto
+  namespace: qa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: amc-py-agent-ediauto
+  template:
+    metadata:
+      labels:
+        app: amc-py-agent-ediauto
+        azure.workload.identity/use: "true"
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/path: '/metrics'
+        prometheus.io/port: '8080'
+        prometheus.io/scheme: 'http'
+    spec:
+      serviceAccountName: kv-reader-sa
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: amc-py-agent-ediauto
+          image: crintcom001.azurecr.io/amc-py-agent-ediauto/qa:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ENVIRONMENT
+              value: qa
+            - name: DOCKER
+              value: "SI"
+            - name: MAILING_EDI_MAILBOX
+              value: integrations_test@amcglobalco.com
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "250m"
+          securityContext:
+            allowPrivilegeEscalation: false
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
